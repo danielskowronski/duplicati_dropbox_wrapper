@@ -21,7 +21,7 @@ EXITCODE=1
 
 for i in `seq 10`
 do
-	/usr/bin/duplicati-cli backup "dropbox:///XXXX/${hostname}${path}?authid=${authid}" "${path}" --backup-name="${path}" --dbpath="/var/duplicati_${path_encoded}.sqlite" --encryption-module=aes --compression-module=zip --dblock-size=50mb --passphrase="${passphrase}" --retention-policy="${retention}" --disable-module=console-password-input 
+	/usr/bin/duplicati-cli backup "dropbox:///amaterasu/${hostname}${path}?authid=${authid}" "${path}" --backup-name="${path}" --dbpath="/var/duplicati_${path_encoded}.sqlite" --encryption-module=aes --compression-module=zip --dblock-size=50mb --passphrase="${passphrase}" --retention-policy="${retention}" --disable-module=console-password-input 
 	EXITCODE=$?
 
 	if [ $EXITCODE -lt 10 ]
