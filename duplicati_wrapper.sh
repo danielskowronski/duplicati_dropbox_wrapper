@@ -8,6 +8,14 @@ source /etc/duplicati_wrapper.conf
 PATH_ENCODED="`echo ${SRC_PATH} | base32 | tr '=' '_'`"
 HOSTNAME="`hostname`"
 
+function do_repair {
+    echo "=== do_repair"
+    /usr/bin/duplicati-cli repair "dropbox:///${DROPBOX_MASTERPATH}/${HOSTNAME}${SRC_PATH}?authid=${DROPBOX_AUTHID}" --backup-name="${SRC_PATH}" --dbpath="/var/duplicati_${PATH_ENCODED}.sqlite" --encryption-module=aes --compression-module=zip --dblock-size=50mb --passphrase="${DUPLICATI_PASSPHRASE}" --retention-policy="${DUPLICATI_RETENTION}" --disable-module=console-password-input 
+}
+function do_backup {
+    echo "=== do_backup"
+    /usr/bin/duplicati-cli backup "dropbox:///${DROPBOX_MASTERPATH}/${HOSTNAME}${SRC_PATH}?authid=${DROPBOX_AUTHID}" "${SRC_PATH}" --backup-name="${SRC_PATH}" --dbpath="/var/duplicati_${PATH_ENCODED}.sqlite" --encryption-module=aes --compression-module=zip --dblock-size=50mb --passphrase="${DUPLICATI_PASSPHRASE}" --retention-policy="${DUPLICATI_RETENTION}" --disable-module=console-password-input 
+}
 
 if [[ "$1" ==  "backup" ]]; then
     metrics_name="duplicati_${HOSTNAME}_`echo $SRC_PATH | tr '/' '_'`"
@@ -24,7 +32,7 @@ if [[ "$1" ==  "backup" ]]; then
 
     for i in `seq 10`
     do
-    	/usr/bin/duplicati-cli backup "dropbox:///${DROPBOX_MASTERPATH}/${HOSTNAME}${SRC_PATH}?authid=${DROPBOX_AUTHID}" "${SRC_PATH}" --backup-name="${SRC_PATH}" --dbpath="/var/duplicati_${PATH_ENCODED}.sqlite" --encryption-module=aes --compression-module=zip --dblock-size=50mb --passphrase="${DUPLICATI_PASSPHRASE}" --retention-policy="${DUPLICATI_RETENTION}" --disable-module=console-password-input 
+        do_backup
     	EXITCODE=$?
 
     	if [ $EXITCODE -lt 10 ]
@@ -32,6 +40,7 @@ if [[ "$1" ==  "backup" ]]; then
     		break
     	fi
 
+        do_repair
     	sleep $((1 + RANDOM % 60))
     done
 
@@ -46,7 +55,7 @@ EOF
     mv "$metrics_dir/${metrics_name}.prom.$$" "$metrics_dir/${metrics_name}.prom"
 
 elif [[ "$1" ==  "repair" ]]; then
-    /usr/bin/duplicati-cli repair "dropbox:///${DROPBOX_MASTERPATH}/${HOSTNAME}${SRC_PATH}?authid=${DROPBOX_AUTHID}" --backup-name="${SRC_PATH}" --dbpath="/var/duplicati_${PATH_ENCODED}.sqlite" --encryption-module=aes --compression-module=zip --dblock-size=50mb --passphrase="${DUPLICATI_PASSPHRASE}" --retention-policy="${DUPLICATI_RETENTION}" --disable-module=console-password-input 
+    do_repair
 else
     echo "usage: $0 <backup,repair> SRC_PATH"
 fi
